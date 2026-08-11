@@ -1,0 +1,27 @@
+{
+  "name": "caxeta2",
+  "version": "1.0.0",
+  "description": "nova uc",
+  "homepage": "https://github.com/nathimartins590-sys/caxeta2#readme",
+  "bugs": {
+    "url": "https://github.com/nathimartins590-sys/caxeta2/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathimartins590-sys/caxeta2.git"
+  },
+  "license": "ISC",
+  "author": "Nathalia",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
