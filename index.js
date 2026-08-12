@@ -1,73 +1,121 @@
 import express from 'express'
-import produtos from './repository/produtos.js';
-import produtos from './repository/produtos.js';
 
-const app = express()
+const app = express();
 
-app.use(express.json())
+app.use(express.json());
 
-app.get("/produtos", (req, res) => {
-    const { marca, nome } = req.query
-    if (marca || nome) {
-        const produtosFiltrados = produtos.filter(item => item.marca.includes(marca) || item.nome.includes(nome))
-        res.status(200).json(produtosFiltrados);
-    } else {
-        res.status(200).json(produtos);
-    }
-})
+let pecas = [
+  { id: 1, nome: 'Camiseta azul', tipo: 'top', cor: 'azul' },
+  { id: 2, nome: 'Calça jeans', tipo: 'bottom', cor: 'azul' },
+  { id: 3, nome: 'Jaqueta de couro', tipo: 'outerwear', cor: 'preto' },
+  { id: 4, nome: 'Tênis branco', tipo: 'calçado', cor: 'branco' }
+];
 
-app.get("/produtos", (req, res) => {
-    res.status(200).json(produtos);
-})
+function pecaParaXml(peca) {
+  return `
+  <peca>
+    <id>${peca.id}</id>
+    <nome>${peca.nome}</nome>
+    <tipo>${peca.tipo}</tipo>
+    <cor>${peca.cor}</cor>
+  </peca>`;
+}
 
-app.get("/produtos/:id", (req, res) => {
-    const produtos = produtos.find(p => p.id === Number(req.params.id));
+app.get('/pecas', (req, res) => {
+  let resultado = pecas;
+  const { nome, tipo, cor } = req.query;
 
-    if (!produtos) {
-        return res.status(404).json({ erro: "produto não encontrado"});
-    }
-    res.status(200).json(produtos);
+  if (nome) {
+    resultado = resultado.filter(p =>
+      p.nome.toLowerCase().includes(nome.toLowerCase())
+    );
+  }
+  if (tipo) {
+    resultado = resultado.filter(p =>
+      p.tipo.toLowerCase() === tipo.toLowerCase()
+    );
+  }
+  if (cor) {
+    resultado = resultado.filter(p =>
+      p.cor.toLowerCase() === cor.toLowerCase()
+    );
+  }
 
-    if (req?.body?.nome && req.body.nome != "") {
-        produtos.nome = req.body.nome;
-    }
-    if (req?.body?.marca && req.body.marca != "") {
-        produtos.marca = req.body.marca;
-    }
+  res.status(200).json(resultado);
+});
 
-})
+app.get('/pecas/xml', (req, res) => {
+  let resultado = pecas;
+  const { nome, tipo, cor } = req.query;
 
-app.post("/protudos", (req, res) => {
+  if (nome) {
+    resultado = resultado.filter(p =>
+      p.nome.toLowerCase().includes(nome.toLowerCase())
+    );
+  }
+  if (tipo) {
+    resultado = resultado.filter(p =>
+      p.tipo.toLowerCase() === tipo.toLowerCase()
+    );
+  }
+  if (cor) {
+    resultado = resultado.filter(p =>
+      p.cor.toLowerCase() === cor.toLowerCase()
+    );
+  }
 
-    const nome = req?.body?.nome || null
-    const marca = req?.body?.marca || null
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<pecas>${resultado.map(pecaParaXml).join('')}
+</pecas>`;
 
-    if (!marca) {
-        res.status(400).json({ erro: "marca e obrigatorio"})
-    }
+  res.type('application/xml').status(200).send(xml);
+});
 
-    if (!nome) {
-        res.status(400).json({ erro: "nome e obrigatorio"})
-    }
+app.get('/pecas/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const peca = pecas.find(p => p.id === id);
 
-    const novoProduto = { 
-        id: produtos.length +1, 
-        nome: req.body.nome, 
-        marca: req.body.marca }
+  if (!peca) {
+    return res.status(404).json({ erro: 'Peça não encontrada' });
+  }
 
-        produtos.push(novoProduto);
-        res.status(201).json(novoProduto);
-})
+  res.status(200).json(peca);
+});
 
-app.get("/produto/:id/xml", (req, res) => {
-    const produto = produtos.find(p => p.id === Number(req.params.id));
-    if (!produto) {
-        return res.status(404).type("application/xml").send("<erro>Produto nao encontrado</erro>");
-    }
-    res.status(200).type("application/xml").send('<id>${produto.id}</id><nome>${produto.nome}</nome>')
-})
+app.get('/pecas/:id/xml', (req, res) => {
+  const id = parseInt(req.params.id);
+  const peca = pecas.find(p => p.id === id);
 
+  if (!peca) {
+    const xmlErro = `<?xml version="1.0" encoding="UTF-8"?>
+<erro>Peça não encontrada</erro>`;
+    return res.type('application/xml').status(404).send(xmlErro);
+  }
 
-app.listen(3000,() => {
-    console.log("bah ta funcionando 3000")
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>${pecaParaXml(peca)}`;
+  res.type('application/xml').status(200).send(xml);
+});
+
+app.post('/pecas', (req, res) => {
+  const { nome, tipo, cor } = req.body;
+
+  if (!nome || !tipo || !cor) {
+    return res.status(400).json({
+      erro: 'Campos obrigatórios: nome, tipo, cor'
+    });
+  }
+
+  const novaPeca = {
+    id: pecas.length > 0 ? Math.max(...pecas.map(p => p.id)) + 1 : 1,
+    nome,
+    tipo,
+    cor
+  };
+
+  pecas.push(novaPeca);
+  res.status(201).json(novaPeca);
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em 3000`);
 });
